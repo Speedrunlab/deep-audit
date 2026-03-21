@@ -1,11 +1,12 @@
 ---
 name: deep-audit
 description: >
-  Four-phase code auditor that chains planning mode, security review, extended thinking,
-  and execution into a single disciplined pipeline. Catches what pattern-matching misses.
-  Use when auditing a codebase, reviewing a PR for production readiness, or hardening
-  code before deployment. Activates on /deep-audit or when the user asks for a code audit,
-  security review, or production readiness check.
+  Four-phase code auditor for repository review, security analysis,
+  business-logic inspection, and production-readiness assessment. Produces
+  evidence-based findings with file paths, line numbers, and actionable
+  fixes. Operates in audit-only or fix mode depending on available tools
+  and user approval. Activates on /deep-audit or when the user asks for
+  a code audit, security review, or production readiness check.
 allowed-tools: Read, Grep, Glob, Bash(find:*), Bash(git:*), Bash(npm:*), Bash(pip:*), Bash(cat:*), Bash(wc:*)
 ---
 
@@ -26,11 +27,77 @@ failures, reliability risks, and production readiness gaps.
 
 ## How this skill works
 
-This skill chains four distinct phases. Execute them in sequence. Never skip a phase.
-Never merge phases. Each phase has a specific purpose and a specific output.
+This skill chains four distinct phases. Each phase has a specific purpose and a specific output.
+
+Execute phases in sequence. The operating mode determines which phases
+run. Within each active phase, follow the full process -- do not cut
+corners within a phase.
 
 If the user provides a scope (e.g., a directory, a file, a PR diff), use that scope.
 If no scope is provided, audit the entire project directory.
+
+---
+
+## Operating Modes
+
+Select the narrowest mode that matches the user request. Do not force
+full-repo execution when a narrower scope was explicitly requested.
+
+- **Full Audit** -- Phases 1, 2, 3, then Phase 4 if permitted. Use when
+  no specific scope is provided.
+- **Scoped Audit** -- All phases, but limited to a provided directory or
+  file set. Skip irrelevant architecture mapping.
+- **PR Audit** -- Limit analysis to changed files in the diff plus any
+  directly impacted files. Focus on what changed, not the entire repo.
+- **Audit-Only** -- Phases 1, 2, 3 only. No code changes. Use when the
+  user wants findings without remediation.
+- **Fix Mode** -- Phase 4 only. Applies fixes for previously identified
+  critical/high findings. Requires edit and verification tools to be
+  available and user to have explicitly requested remediation.
+
+---
+
+## Evidence Standard
+
+A finding may be reported only if ALL of the following are true:
+
+1. The relevant code or configuration is directly observable in the
+   repository.
+2. The file path and line number can be identified.
+3. The failure mode or exploit path can be explained from the observed
+   code.
+4. The proposed fix is specific to the observed implementation.
+
+Rules:
+- Do not report hypothetical vulnerabilities that depend on missing
+  runtime context unless clearly marked as "UNVERIFIED -- requires
+  runtime confirmation."
+- Do not escalate severity based on intuition alone.
+- When runtime behavior cannot be verified from source, state
+  "not runtime-verified."
+- Distinguish between OBSERVED (directly visible in code) and INFERRED
+  (logically deduced but not directly confirmed) findings. Label each.
+- Precision is more important than volume.
+- Absence of evidence is not evidence of safety; report only what is
+  supported by code-level proof.
+
+---
+
+## Severity Standard
+
+- **Critical** -- Direct path to catastrophic compromise: unauthorized
+  admin or data access, remote code execution, material financial loss,
+  or complete authentication bypass. Exploitable without preconditions.
+- **High** -- Serious security or correctness issue with realistic
+  exploitability or major production impact, but not full catastrophic
+  compromise. May require some preconditions.
+- **Medium** -- Meaningful weakness or reliability issue that should be
+  fixed, but requires preconditions, has limited impact, or gives only
+  partial control.
+- **Low** -- Minor weakness, hardening gap, hygiene issue, or low-impact
+  defect.
+
+Rule: If exploitability or impact is uncertain, choose the lower severity.
 
 ---
 
@@ -99,9 +166,15 @@ ground that Anthropic's /security-review covers -- OWASP Top 10 and common patte
 - Missing key rotation mechanisms
 
 ### Dependency vulnerabilities
-- Known CVEs in dependencies (check lock files against known vulnerability databases)
+- Dependency risk review: check lockfiles for outdated packages, unpinned
+  versions, suspicious package names, and any locally available audit
+  tooling (npm audit, pip audit, etc.). Only report confirmed CVEs when
+  vulnerability database access or local audit tooling is actually
+  available. If no vulnerability database is available, state that CVE
+  confirmation was not performed and label findings as DEPENDENCY RISK
+  rather than confirmed vulnerabilities.
 - Outdated packages with known security patches available
-- Typosquatting risks (suspiciously named packages)
+- Suspicious or unfamiliar package names that warrant manual verification
 - Unpinned dependency versions
 
 ### Configuration & deployment
@@ -181,7 +254,19 @@ Use deep reasoning to trace data flows, understand business logic, and identify 
 
 ## PHASE 4 -- EXECUTION (Fix & Verify)
 
-**Purpose:** Apply fixes for critical and high severity findings. Verify they work.
+**Purpose:** Apply fixes for critical and high severity findings, OR
+propose fixes if the environment does not support code modification.
+
+Phase 4 only executes if:
+1. Critical or high severity findings exist from Phases 2 or 3.
+2. The user has requested remediation (not audit-only mode).
+3. For applied fixes: edit and verification tools are available.
+4. For proposed fixes: edit tools are unavailable or the user prefers
+   review before application.
+
+If write, edit, or test-execution capability is unavailable, do not
+claim that a fix was applied. Provide a patch plan or code diff proposal
+instead.
 
 **Rules:**
 1. Fix ONLY critical and high severity findings from Phases 2 and 3
@@ -191,7 +276,7 @@ Use deep reasoning to trace data flows, understand business logic, and identify 
 5. If a fix requires a test, write the test
 6. If a fix cannot be safely applied without more context, flag it as MANUAL REVIEW REQUIRED
 
-**Output format:**
+### If fixes were applied (edit tools available):
 
 ## PHASE 4 -- FIXES APPLIED
 
@@ -200,6 +285,17 @@ Use deep reasoning to trace data flows, understand business logic, and identify 
 - **File:** [path]
 - **Change:** [description of what was changed]
 - **Verification:** [how you verified it works -- test run, manual check, etc.]
+
+### If fixes could not be applied (edit tools unavailable):
+
+## PHASE 4 -- PROPOSED FIXES
+
+### Proposed fix [n]: [short description]
+- **Finding:** [reference to Phase 2 or 3 finding]
+- **File:** [path]
+- **Proposed change:** [code diff or description]
+- **Why not auto-applied:** [reason -- e.g., no edit capability, requires manual review, risk too high]
+- **Suggested verification:** [how to verify after manual application]
 
 ### MANUAL REVIEW REQUIRED
 - [finding reference] -- [why it cannot be safely auto-fixed]

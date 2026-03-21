@@ -19,7 +19,19 @@ Every finding comes with a file, a line number, and a fix.
 | **1. Planning** | Wide exploration | Maps the repo, identifies architecture, ranks high-risk surfaces |
 | **2. Security Review** | Structured scan | OWASP Top 10, injection attacks, auth flaws, data exposure, crypto issues, dependency CVEs |
 | **3. Deep Analysis** | Extended thinking | Business logic flaws, race conditions, error handling gaps, dead code, config hygiene |
-| **4. Execution** | Surgical fixes | Applies fixes for critical/high findings, verifies each, flags what needs manual review |
+| **4. Execution** | Surgical fixes | Applies or proposes fixes for critical/high findings depending on host environment capabilities, verifies where possible, flags what needs manual review |
+
+## Modes
+
+| Mode | What runs | When to use |
+|------|-----------|-------------|
+| Full Audit | All four phases | No specific scope provided |
+| Scoped Audit | All phases, limited scope | Auditing a directory or file set |
+| PR Audit | Changed files + impacted files | Reviewing a pull request |
+| Audit-Only | Phases 1-3, no fixes | Want findings without remediation |
+| Fix Mode | Phase 4 only | Applying fixes for known findings |
+
+Fix mode requires edit/verification tools and explicit user request.
 
 ## Install
 
@@ -68,7 +80,7 @@ The skill follows the Agent Skills open standard. Drop the `.claude/skills/deep-
 - Broken authentication and access control
 - Hardcoded secrets, PII in logs, sensitive data in URLs
 - Weak cryptography, insecure random generation
-- Known CVEs in dependencies, unpinned versions
+- Dependency risk review, unpinned versions, confirmed CVEs when audit tooling is available
 - Debug mode, default credentials, missing security headers
 
 **Phase 3 (Deep Analysis):**
@@ -79,6 +91,18 @@ The skill follows the Agent Skills open standard. Drop the `.claude/skills/deep-
 - Missing timeouts, unbounded operations
 - Dead code, inconsistent validation, copy-paste divergence
 - Environment variables referenced but never validated
+
+## Verification limits
+
+- Dependency CVEs are confirmed only when local audit tooling or
+  vulnerability database access is available. Otherwise reported as
+  dependency risk.
+- Runtime behavior is not verified unless executable test tools are
+  available in the environment.
+- Findings are based on observable repository evidence. Inferred risks
+  are labelled as such.
+- Fix application depends on the host environment. When edit tools are
+  unavailable, fixes are proposed as diffs for manual application.
 
 ## What it does NOT do
 
