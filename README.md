@@ -128,3 +128,16 @@ MIT License. Use it, fork it, improve it.
 Built by [Speedrun AI Labs](https://speedrunlab.ai) in Sydney, Australia. We build AI tools that make a meaningful difference. This is the first skill in our OpenClaw Skill Library -- more coming.
 
 Part of our research into closing the last 10% gap in AI-assisted software development. Read our papers at [speedrunlab.ai](https://speedrunlab.ai).
+
+
+---
+
+## Part of the Speedrun AI Labs Skill Library
+
+This skill is part of the open-source skill library at [speedrunlab.ai](https://www.speedrunlab.ai).
+
+Other skills:
+- [/deep-audit](https://github.com/Speedrunlab/deep-audit) — four-phase code auditor with evidence standards
+- [/no-slop-writing](https://github.com/Speedrunlab/no-slop-writing) — eliminates AI-speak from generated text (American English)
+- [/no-slop-writing-au](https://github.com/Speedrunlab/no-slop-writing-au) — same, Australian English edition
+- [/read-before-write](https://github.com/Speedrunlab/read-before-write) — forces AI agents to read files before editing them
