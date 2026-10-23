@@ -137,6 +137,7 @@ Part of our research into closing the last 10% gap in AI-assisted software devel
 This skill is part of the open-source skill library at [speedrunlab.ai](https://www.speedrunlab.ai).
 
 Other skills:
+- [/reverse-engineer-anything-self-learning-loop](https://github.com/Speedrunlab/reverse-engineer-anything-self-learning-loop), examine a product you are authorised to rebuild, build your own, and improve it against the original until it is 100% there
 - [/deep-audit](https://github.com/Speedrunlab/deep-audit) — four-phase code auditor with evidence standards
 - [/no-slop-writing](https://github.com/Speedrunlab/no-slop-writing) — eliminates AI-speak from generated text (American English)
 - [/no-slop-writing-au](https://github.com/Speedrunlab/no-slop-writing-au) — same, Australian English edition
